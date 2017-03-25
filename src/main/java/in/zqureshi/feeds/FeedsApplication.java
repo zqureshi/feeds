@@ -1,5 +1,6 @@
 package in.zqureshi.feeds;
 
+import in.zqureshi.feeds.cli.RocksDBCommand;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -17,7 +18,7 @@ public class FeedsApplication extends Application<FeedsConfiguration> {
 
     @Override
     public void initialize(final Bootstrap<FeedsConfiguration> bootstrap) {
-        // TODO: application initialization
+        bootstrap.addCommand(new RocksDBCommand());
     }
 
     @Override
