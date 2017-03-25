@@ -27,3 +27,7 @@ hs_err_pid*
 # maven
 dependency-reduced-pom.xml
 target
+
+# IntelliJ
+.idea
+*.iml
