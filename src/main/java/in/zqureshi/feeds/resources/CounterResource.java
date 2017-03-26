@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Path("/counters")
+@Path("/v1/counters")
 @Produces(MediaType.APPLICATION_JSON)
 public class CounterResource {
     private FeedsDB db;
