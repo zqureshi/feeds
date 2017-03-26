@@ -23,6 +23,7 @@
         <mainClass>in.zqureshi.feeds.FeedsApplication</mainClass>
         <rocksdb.version>5.1.2</rocksdb.version>
         <junit.version>4.12</junit.version>
+        <mockito.version>2.7.19</mockito.version>
     </properties>
 
     <dependencyManagement>
@@ -51,6 +52,11 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
         </dependency>
     </dependencies>
 
