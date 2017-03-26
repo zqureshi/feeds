@@ -1,6 +1,7 @@
 package in.zqureshi.feeds.resources;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Bytes;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.rocksdb.RocksDBException;
@@ -60,5 +61,18 @@ public class FeedsDBTest {
         assertEquals(
             ImmutableMap.of("/first", 2L, "/second", 1L, "/popular", 100L),
             db.counters());
+    }
+
+    @Test
+    public void simpleGetAndPut() {
+        // Should return null for nonexistant key.
+        assertEquals(null, db.get("/foobar"));
+
+        // Put and get
+        db.put("/memory", "#DEADBEEF".getBytes());
+        assertArrayEquals("#DEADBEEF".getBytes(), db.get("/memory"));
+
+        db.put("/memory", "".getBytes());
+        assertArrayEquals("".getBytes(), db.get("/memory"));
     }
 }

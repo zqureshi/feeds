@@ -69,6 +69,26 @@ public class FeedsDB implements Managed {
         return ImmutableMap.copyOf(map);
     }
 
+    public byte[] get(String key) {
+        try {
+            return db.get((DATA_PREFIX + key).getBytes());
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // No synchronization done, it is up to consumer to add guarantee.
+    // Should use counter service to guarantee unique keys.
+    //
+    // TODO: RocksDB java doesn't have OptimisticTransactionDB yet.
+    public void put(String key, byte[] value) {
+        try {
+            db.put((DATA_PREFIX + key).getBytes(), value);
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void start() throws RocksDBException {
     }
