@@ -44,6 +44,7 @@ public class UserResource {
         return users;
     }
 
+    // Don't need synchronization because uniqueness is guaranteed by atomic incrementCounter.
     @POST
     public User createUser() throws JsonProcessingException {
         final long id = db.incrementCounter(USERS_COUNTER);
