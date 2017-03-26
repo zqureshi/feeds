@@ -16,8 +16,12 @@ import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class FeedsDB implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeedsDB.class);
@@ -25,8 +29,7 @@ public class FeedsDB implements Managed {
     private static final String SYSTEM_PREFIX = "/system";
     private static final String COUNTERS_PREFIX = SYSTEM_PREFIX + "/counters";
 
-    private static final String USERS_PREFIX = "/users";
-    private static final String FEEDS_PREFIX = "/feeds";
+    private static final String DATA_PREFIX = "/data";
 
     private RocksDB db;
 
@@ -37,30 +40,20 @@ public class FeedsDB implements Managed {
         options.setCreateIfMissing(true);
         options.setWalSizeLimitMB(1024);
 
-        this.db = RocksDB.open(options, path);
+        db = RocksDB.open(options, path);
     }
 
     public synchronized long incrementCounter(final String counter) {
-        try {
-            byte[] key = (COUNTERS_PREFIX + counter).getBytes();
-            byte[] current = this.db.get(key);
+        long current = getCounterInternal(counter);
+        putCounterInternal(counter, current + 1);
 
-            if (current == null) {
-                current = Longs.toByteArray(0);
-            }
-
-            this.db.put(key, Longs.toByteArray(Longs.fromByteArray(current) + 1));
-
-            return Longs.fromByteArray(current);
-        } catch (RocksDBException e) {
-            throw new RuntimeException(e);
-        }
+        return current;
     }
 
     public ImmutableMap<String, Long> counters() {
         HashMap<String, Long> map = new HashMap<>(50);
 
-        RocksIterator iterator = this.db.newIterator();
+        RocksIterator iterator = db.newIterator();
 
         if (iterator != null) {
             for (iterator.seek(COUNTERS_PREFIX.getBytes());
@@ -82,12 +75,15 @@ public class FeedsDB implements Managed {
 
     @Override
     public void stop() throws RocksDBException {
-        this.db.close();
+        db.close();
     }
 
     public static class FeedsDBFactory {
         @NotEmpty
         private String path;
+
+        @NotNull
+        private Map<String, Long> counters = Collections.emptyMap();
 
         @JsonProperty
         public String getPath() {
@@ -96,13 +92,62 @@ public class FeedsDB implements Managed {
 
         @JsonProperty
         public void setPath(String path) {
-            this.path = path;
+            path = path;
+        }
+
+        @JsonProperty
+        public Map<String, Long> getCounters() {
+            return counters;
+        }
+
+        @JsonProperty
+        public void setCounters(Map<String, Long> counters) {
+            counters = counters;
         }
 
         public FeedsDB build(Environment environment) throws RocksDBException {
-            FeedsDB db = new FeedsDB(getPath());
+            FeedsDB db = build();
             environment.lifecycle().manage(db);
+
             return db;
+        }
+
+        public FeedsDB build() throws RocksDBException {
+            FeedsDB db = new FeedsDB(getPath());
+
+            // Load all configured counters
+            for (Map.Entry<String, Long> entry : getCounters().entrySet()) {
+                if (db.getCounterInternal(entry.getKey()) == 0) {
+                    db.putCounterInternal(entry.getKey(), entry.getValue());
+                }
+            }
+
+            return db;
+        }
+    }
+
+    private long getCounterInternal(String counter) {
+        try {
+            byte[] current = db.get((COUNTERS_PREFIX + counter).getBytes());
+
+            if (current == null) {
+                return 0;
+            }
+
+            return Longs.fromByteArray(current);
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void putCounterInternal(String counter, long value) {
+        try {
+            db.put(
+                (COUNTERS_PREFIX + counter).getBytes(),
+                Longs.toByteArray(value)
+            );
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e);
         }
     }
 }

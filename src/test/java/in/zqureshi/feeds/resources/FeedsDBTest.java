@@ -21,41 +21,41 @@ public class FeedsDBTest {
 
     @Before
     public void before() throws RocksDBException {
-        this.db = new FeedsDB(folder.getRoot().getPath());
+        db = new FeedsDB(folder.getRoot().getPath());
     }
 
     @After
     public void after() throws Exception {
-        this.db.stop();
+        db.stop();
     }
 
     @Test
     public void incrementCounter() {
         // Should start with zero
-        assertEquals(0, this.db.incrementCounter("/users"));
+        assertEquals(0, db.incrementCounter("/users"));
         // Then increase monotonically
-        assertEquals(1, this.db.incrementCounter("/users"));
+        assertEquals(1, db.incrementCounter("/users"));
         // Should be independent for a different key
-        assertEquals(0, this.db.incrementCounter("/feeds"));
-        assertEquals(1, this.db.incrementCounter("/feeds"));
+        assertEquals(0, db.incrementCounter("/feeds"));
+        assertEquals(1, db.incrementCounter("/feeds"));
         // And increment properly for previous key
-        assertEquals(2, this.db.incrementCounter("/users"));
+        assertEquals(2, db.incrementCounter("/users"));
 
-        for (int i = 0; i < 100000; i++) {
-            assertEquals(i, this.db.incrementCounter("/loop"));
+        for (int i = 0; i < 10000; i++) {
+            assertEquals(i, db.incrementCounter("/loop"));
         }
     }
 
     @Test
     public void counters() {
-        this.db.incrementCounter("/first");
-        this.db.incrementCounter("/first");
+        db.incrementCounter("/first");
+        db.incrementCounter("/first");
 
-        this.db.incrementCounter("/second");
-        this.db.incrementCounter("/third");
+        db.incrementCounter("/second");
+        db.incrementCounter("/third");
 
         assertEquals(
             ImmutableMap.of("/first", 2L, "/second", 1L, "/third", 1L),
-            this.db.counters());
+            db.counters());
     }
 }

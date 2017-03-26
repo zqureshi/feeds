@@ -19,6 +19,7 @@ public class FeedsApplication extends Application<FeedsConfiguration> {
 
     @Override
     public void initialize(final Bootstrap<FeedsConfiguration> bootstrap) {
+        bootstrap.addCommand(new RocksDBCommand());
     }
 
     @Override

@@ -1,9 +1,11 @@
 package in.zqureshi.feeds.cli;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import in.zqureshi.feeds.FeedsConfiguration;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
 import org.rocksdb.Options;
@@ -19,7 +21,7 @@ public class RocksDBCommand extends ConfiguredCommand<FeedsConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RocksDBCommand.class);
 
     public RocksDBCommand() {
-        super("rocksdb", "RocksDB WAL operations");
+        super("rocksdb", "Dump RocksDB");
     }
 
     @Override
@@ -36,20 +38,15 @@ public class RocksDBCommand extends ConfiguredCommand<FeedsConfiguration> {
         Options options = new Options().setCreateIfMissing(true);
         RocksDB db = null;
         try {
-            db = RocksDB.open(options, "/tmp/feeds.rocksdb");
-            LOGGER.info("Successfully opened database!");
+            feedsConfiguration.getFeedsDBFactory().build().stop();
+            db = RocksDB.open(options, feedsConfiguration.getFeedsDBFactory().getPath());
         } catch (Exception e) {
             LOGGER.error("Could not open database", e);
         }
 
-        final int rand = (new Random()).nextInt(128);
-        LOGGER.info("Inserting " + rand);
-        db.put(Ints.toByteArray(rand), "".getBytes());
-
-        LOGGER.info("Dumping database");
         RocksIterator iterator = db.newIterator();
         for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-            System.out.println(Ints.fromByteArray(iterator.key()));
+            System.out.println(new String(iterator.key()) + " => " + Longs.fromByteArray(iterator.value()));
         }
     }
 }
