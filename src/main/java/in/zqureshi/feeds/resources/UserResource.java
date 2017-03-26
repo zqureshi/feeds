@@ -47,7 +47,7 @@ public class UserResource {
     @POST
     public User createUser() throws JsonProcessingException {
         final long id = db.incrementCounter(USERS_COUNTER);
-        User user = new User(id, Collections.emptySet());
+        User user = new User(id, Collections.emptyMap());
         db.put(USERS_PREFIX + id, mapper.writeValueAsBytes(user));
 
         return user;

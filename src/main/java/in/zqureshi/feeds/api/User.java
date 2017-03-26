@@ -5,17 +5,18 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 
+import java.util.Map;
 import java.util.Set;
 
 public class User implements Comparable<User> {
     private Long id;
-    private Set<String> feeds;
+    private Map<Long, Long> feeds;
 
     public User() {
         // Jackson deserialization
     }
 
-    public User(Long id, Set<String> feeds) {
+    public User(Long id, Map<Long, Long> feeds) {
         this.id = id;
         this.feeds = feeds;
     }
@@ -31,21 +32,21 @@ public class User implements Comparable<User> {
     }
 
     @JsonProperty
-    public Set<String> getFeeds() {
+    public Map<Long, Long> getFeeds() {
         return feeds;
     }
 
     @JsonProperty
-    public void setFeeds(Set<String> feeds) {
+    public void setFeeds(Map<Long, Long> feeds) {
         this.feeds = feeds;
     }
 
-    public void addFeed(String feed) {
-        feeds.add(feed);
+    public void addFeed(Long id, Long startIndex) {
+        feeds.putIfAbsent(id, startIndex);
     }
 
-    public void removeFeed(String feed) {
-        feeds.remove(feed);
+    public void removeFeed(Long id) {
+        feeds.remove(id);
     }
 
     @Override
