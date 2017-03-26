@@ -37,6 +37,10 @@ public class FeedsDB implements Managed {
         db = RocksDB.open(options, path);
     }
 
+    public long getCounter(final String counter) {
+        return getCounterInternal(counter);
+    }
+
     public synchronized long incrementCounter(final String counter) {
         long current = getCounterInternal(counter);
         putCounterInternal(counter, current + 1);
