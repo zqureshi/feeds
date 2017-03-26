@@ -1,8 +1,8 @@
 db:
   path: /tmp/feeds.rocksdb
   counters:
-    /users: 10
-    /feeds: 1000
+    # User id starts from 100 while everything else from 1000
+    /users: 100
 
 logging:
   level: INFO

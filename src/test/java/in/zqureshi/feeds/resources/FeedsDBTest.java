@@ -30,17 +30,17 @@ public class FeedsDBTest {
     @Test
     public void incrementCounter() {
         // Should start with zero
-        assertEquals(0, db.incrementCounter("/users"));
+        assertEquals(10000, db.incrementCounter("/users"));
         // Then increase monotonically
-        assertEquals(1, db.incrementCounter("/users"));
+        assertEquals(10001, db.incrementCounter("/users"));
         // Should be independent for a different key
-        assertEquals(0, db.incrementCounter("/feeds"));
-        assertEquals(1, db.incrementCounter("/feeds"));
+        assertEquals(10000, db.incrementCounter("/feeds"));
+        assertEquals(10001, db.incrementCounter("/feeds"));
         // And increment properly for previous key
-        assertEquals(2, db.incrementCounter("/users"));
+        assertEquals(10002, db.incrementCounter("/users"));
 
         for (int i = 0; i < 10000; i++) {
-            assertEquals(i, db.incrementCounter("/loop"));
+            assertEquals(10000 + i, db.incrementCounter("/loop"));
         }
     }
 
@@ -56,7 +56,7 @@ public class FeedsDBTest {
         }
 
         assertEquals(
-            ImmutableMap.of("/first", 2L, "/second", 1L, "/popular", 100L),
+            ImmutableMap.of("/first", 10002L, "/second", 10001L, "/popular", 10100L),
             db.counters());
     }
 
@@ -78,7 +78,7 @@ public class FeedsDBTest {
         db.put("/users/1", "/1".getBytes());
         db.put("/users/3", "/3".getBytes());;
         db.put("/users/2", "/2".getBytes());
-        db.put("/counters/1", Longs.toByteArray(100L));
+        db.put("/counters/1", Longs.toByteArray(10000L));
 
         FeedsDB.PrefixIterator it = db.scan("/users");
 

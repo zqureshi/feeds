@@ -25,6 +25,9 @@ public class FeedsDB implements Managed {
 
     private static final String DATA_PREFIX = "/data";
 
+    // Hacky way to provide stable ordering of article, feeds.
+    private static final Long INITIAL_COUNTER_VALUE = 10000L;
+
     private RocksDB db;
 
     public FeedsDB(String path) throws RocksDBException {
@@ -140,7 +143,7 @@ public class FeedsDB implements Managed {
 
             // Load all configured counters
             for (Map.Entry<String, Long> entry : getCounters().entrySet()) {
-                if (db.getCounterInternal(entry.getKey()) == 0) {
+                if (db.getCounterInternal(entry.getKey()) == INITIAL_COUNTER_VALUE) {
                     db.putCounterInternal(entry.getKey(), entry.getValue());
                 }
             }
@@ -183,7 +186,7 @@ public class FeedsDB implements Managed {
             byte[] current = db.get((COUNTERS_PREFIX + counter).getBytes());
 
             if (current == null) {
-                return 0;
+                return INITIAL_COUNTER_VALUE;
             }
 
             return Longs.fromByteArray(current);
