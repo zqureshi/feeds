@@ -52,10 +52,13 @@ public class FeedsDBTest {
         db.incrementCounter("/first");
 
         db.incrementCounter("/second");
-        db.incrementCounter("/third");
+
+        for (int i = 0; i < 100; i++) {
+            db.incrementCounter("/popular");
+        }
 
         assertEquals(
-            ImmutableMap.of("/first", 2L, "/second", 1L, "/third", 1L),
+            ImmutableMap.of("/first", 2L, "/second", 1L, "/popular", 100L),
             db.counters());
     }
 }
