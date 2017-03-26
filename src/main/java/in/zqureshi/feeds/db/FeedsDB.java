@@ -91,8 +91,11 @@ public class FeedsDB implements Managed {
     }
 
     public PrefixIterator scan(String prefix) {
-        String key = DATA_PREFIX + prefix;
-        return new PrefixIterator(key, db.newIterator());
+        return scan(prefix, Optional.empty());
+    }
+
+    public PrefixIterator scan(String prefix, String startIndex) {
+        return scan(prefix, Optional.of(startIndex));
     }
 
     @Override
@@ -156,11 +159,16 @@ public class FeedsDB implements Managed {
         private byte[] prefix;
         private RocksIterator rit;
 
-        public PrefixIterator(String prefix, RocksIterator rit) {
+        public PrefixIterator(RocksIterator rit, String prefix, Optional<String> startIndex) {
             this.prefix = prefix.getBytes();
             this.rit = rit;
 
-            if (this.rit != null) { rit.seek(this.prefix); }
+            String key = prefix;
+            if (startIndex.isPresent()) {
+                key += startIndex.get();
+            }
+
+            if (this.rit != null) { rit.seek(key.getBytes()); }
         }
 
         @Override
@@ -204,5 +212,9 @@ public class FeedsDB implements Managed {
         } catch (RocksDBException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private PrefixIterator scan(String prefix, Optional<String> startIndex) {
+        return new PrefixIterator(db.newIterator(), DATA_PREFIX + prefix, startIndex);
     }
 }

@@ -1,17 +1,23 @@
 package in.zqureshi.feeds.resources;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import in.zqureshi.feeds.db.FeedsDB;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.rocksdb.RocksDBException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
 public class FeedsDBTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeedsDBTest.class);
+
     private FeedsDB db;
 
     @Rule
@@ -90,6 +96,22 @@ public class FeedsDBTest {
         assertFalse(it.hasNext());
 
         // Now trigger the exception
+        it.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testIteratorWithStartIndex() {
+        for (int i = 1000; i < 1100; i++) {
+            db.put("/users/" + i, Ints.toByteArray(i));
+        }
+
+        FeedsDB.PrefixIterator it = db.scan("/users", "/1050");
+
+        for (int i = 1050; i < 1100; i++) {
+            assertEquals(i, Ints.fromByteArray(it.next()));
+        }
+
+        assertFalse(it.hasNext());
         it.next();
     }
 }
