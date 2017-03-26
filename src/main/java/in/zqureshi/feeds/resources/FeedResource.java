@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Path("/v1/feeds")
 @Produces(MediaType.APPLICATION_JSON)
@@ -61,19 +62,24 @@ public class FeedResource {
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Feed showFeed(@PathParam("id") Long id) throws IOException {
+    public Feed showFeed(@PathParam("id") Long id, @QueryParam("startId") Optional<Long> startId) throws IOException {
         // Check if feed exists
         if (db.get(FEEDS_PREFIX + id) == null) {
             throw new NotFoundException();
         }
 
-        // Get article count for feed and return last 50 articles
-        final long articleCount = db.getCounter(ARTICLES_COUNTER_PREFIX + id);
-        final long startIndex = Math.min(0, articleCount - PAGE_SIZE);
+        long startIndex = FeedsDB.INITIAL_COUNTER_VALUE;
+        if (startId.isPresent()) {
+            startIndex = startId.get();
+        } else {
+            // Get article count for feed and return last 50 articles
+            final long articleCount = db.getCounter(ARTICLES_COUNTER_PREFIX + id);
+            startIndex = Math.max(FeedsDB.INITIAL_COUNTER_VALUE, articleCount - PAGE_SIZE);
+        }
 
         List<Article> articles = new ArrayList<>(PAGE_SIZE);
-        for (FeedsDB.PrefixIterator it = db.scan(constructArticlePrefix(id));
-             it.hasNext();) {
+        for (FeedsDB.PrefixIterator it = db.scan(constructArticlePrefix(id), Long.toString(startIndex));
+             it.hasNext() && articles.size() <= PAGE_SIZE;) {
             articles.add(mapper.readValue(it.next(), Article.class));
         }
 

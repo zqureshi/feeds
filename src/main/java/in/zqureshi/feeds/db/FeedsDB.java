@@ -26,7 +26,7 @@ public class FeedsDB implements Managed {
     private static final String DATA_PREFIX = "/data";
 
     // Hacky way to provide stable ordering of article, feeds.
-    private static final Long INITIAL_COUNTER_VALUE = 10000L;
+    public static final Long INITIAL_COUNTER_VALUE = 10000L;
 
     private RocksDB db;
 
