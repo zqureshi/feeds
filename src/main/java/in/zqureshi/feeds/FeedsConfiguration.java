@@ -1,9 +1,8 @@
 package in.zqureshi.feeds;
 
-import in.zqureshi.feeds.resources.FeedsDB;
+import in.zqureshi.feeds.db.FeedsDB;
 import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.validator.constraints.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;

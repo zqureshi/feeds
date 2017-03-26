@@ -1,16 +1,10 @@
 package in.zqureshi.feeds.resources;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Bytes;
+import in.zqureshi.feeds.db.FeedsDB;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.rocksdb.RocksDBException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
 
 import static org.junit.Assert.*;
 

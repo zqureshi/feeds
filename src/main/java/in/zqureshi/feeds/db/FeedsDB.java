@@ -1,10 +1,8 @@
-package in.zqureshi.feeds.resources;
+package in.zqureshi.feeds.db;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Bytes;
-import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
@@ -16,7 +14,6 @@ import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Collections;
