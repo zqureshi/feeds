@@ -1,8 +1,8 @@
 db:
   path: /tmp/feeds.rocksdb
   counters:
-    /users: 1024
-    /feeds: 1024
+    /users: 10
+    /feeds: 1000
 
 logging:
   level: INFO
