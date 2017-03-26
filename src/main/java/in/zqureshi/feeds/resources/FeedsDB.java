@@ -112,7 +112,7 @@ public class FeedsDB implements Managed {
 
         @JsonProperty
         public void setPath(String path) {
-            path = path;
+            this.path = path;
         }
 
         @JsonProperty
@@ -122,7 +122,7 @@ public class FeedsDB implements Managed {
 
         @JsonProperty
         public void setCounters(Map<String, Long> counters) {
-            counters = counters;
+            this.counters = counters;
         }
 
         public FeedsDB build(Environment environment) throws RocksDBException {
