@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class FeedsDB implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeedsDB.class);
@@ -86,6 +83,11 @@ public class FeedsDB implements Managed {
         }
     }
 
+    public PrefixIterator scan(String prefix) {
+        String key = DATA_PREFIX + prefix;
+        return new PrefixIterator(key, db.newIterator());
+    }
+
     @Override
     public void start() throws RocksDBException {
     }
@@ -140,6 +142,35 @@ public class FeedsDB implements Managed {
             }
 
             return db;
+        }
+    }
+
+    public class PrefixIterator implements Iterator<byte[]> {
+        private byte[] prefix;
+        private RocksIterator rit;
+
+        public PrefixIterator(String prefix, RocksIterator rit) {
+            this.prefix = prefix.getBytes();
+            this.rit = rit;
+
+            if (this.rit != null) { rit.seek(this.prefix); }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return rit != null && rit.isValid() && Bytes.indexOf(rit.key(), prefix) == 0;
+        }
+
+        @Override
+        public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            byte[] current = rit.value();
+            rit.next();
+
+            return current;
         }
     }
 

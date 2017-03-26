@@ -1,10 +1,13 @@
 package in.zqureshi.feeds.resources;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Longs;
 import in.zqureshi.feeds.db.FeedsDB;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.rocksdb.RocksDBException;
+
+import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
 
@@ -68,5 +71,25 @@ public class FeedsDBTest {
 
         db.put("/memory", "".getBytes());
         assertArrayEquals("".getBytes(), db.get("/memory"));
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testIterator() {
+        db.put("/users/1", "/1".getBytes());
+        db.put("/users/3", "/3".getBytes());;
+        db.put("/users/2", "/2".getBytes());
+        db.put("/counters/1", Longs.toByteArray(100L));
+
+        FeedsDB.PrefixIterator it = db.scan("/users");
+
+        // Keys should be read in sorted order
+        assertTrue(it.hasNext());
+        assertArrayEquals("/1".getBytes(), it.next());
+        assertArrayEquals("/2".getBytes(), it.next());
+        assertArrayEquals("/3".getBytes(), it.next());
+        assertFalse(it.hasNext());
+
+        // Now trigger the exception
+        it.next();
     }
 }
