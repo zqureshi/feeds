@@ -1,3 +1,6 @@
+db:
+  path: /tmp/feeds.rocksdb
+
 logging:
   level: INFO
   loggers:

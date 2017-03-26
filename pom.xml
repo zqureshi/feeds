@@ -21,6 +21,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <dropwizard.version>1.1.0</dropwizard.version>
         <mainClass>in.zqureshi.feeds.FeedsApplication</mainClass>
+        <rocksdb.version>5.1.2</rocksdb.version>
+        <junit.version>4.12</junit.version>
     </properties>
 
     <dependencyManagement>
@@ -43,7 +45,12 @@
         <dependency>
             <groupId>org.rocksdb</groupId>
             <artifactId>rocksdbjni</artifactId>
-            <version>5.1.2</version>
+            <version>${rocksdb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
         </dependency>
     </dependencies>
 
