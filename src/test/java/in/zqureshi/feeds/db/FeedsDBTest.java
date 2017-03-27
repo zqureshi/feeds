@@ -1,9 +1,8 @@
-package in.zqureshi.feeds.resources;
+package in.zqureshi.feeds.db;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import in.zqureshi.feeds.db.FeedsDB;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.rocksdb.RocksDBException;
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static org.junit.Assert.*;
 
