@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Path("/v1/feeds")
 @Produces(MediaType.APPLICATION_JSON)
@@ -37,6 +34,8 @@ public class FeedResource {
         this.mapper = mapper;
     }
 
+    // This method purposely does not fill the articles for each feed since
+    // it is only meant to list what feeds are available.
     @GET
     public List<Feed> listFeeds() throws IOException {
         List<Feed> feeds = new ArrayList<>();
@@ -65,7 +64,7 @@ public class FeedResource {
     public Feed showFeed(@PathParam("id") Long id, @QueryParam("startId") Optional<Long> startId) throws IOException {
         // Check if feed exists
         if (db.get(FEEDS_PREFIX + id) == null) {
-            throw new NotFoundException();
+            throw new NoSuchElementException();
         }
 
         long startIndex = FeedsDB.INITIAL_COUNTER_VALUE;
@@ -92,7 +91,7 @@ public class FeedResource {
     @Consumes(MediaType.TEXT_PLAIN)
     public Article publishArticle(@PathParam("id") Long feedId, String text) throws JsonProcessingException {
         if (db.get(FEEDS_PREFIX + feedId) == null) {
-            throw new NotFoundException();
+            throw new NoSuchElementException();
         }
 
         final long articleId = db.incrementCounter(ARTICLES_COUNTER_PREFIX + feedId);
