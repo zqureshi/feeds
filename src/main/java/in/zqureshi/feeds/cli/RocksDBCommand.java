@@ -40,8 +40,9 @@ public class RocksDBCommand extends ConfiguredCommand<FeedsConfiguration> {
         try {
             feedsConfiguration.getFeedsDBFactory().build().stop();
             db = RocksDB.open(options, feedsConfiguration.getFeedsDBFactory().getPath());
-        } catch (Exception e) {
+        } catch (RocksDBException e) {
             LOGGER.error("Could not open database", e);
+            throw e;
         }
 
         RocksIterator iterator = db.newIterator();

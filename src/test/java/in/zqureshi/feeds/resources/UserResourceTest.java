@@ -15,6 +15,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.NotFoundException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -127,7 +128,7 @@ public class UserResourceTest {
         assertThat(user.getFeeds()).hasSize(5);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testGetUserDoesNotExist() throws Exception {
         userResource.getUser(999999l);
     }
@@ -174,12 +175,12 @@ public class UserResourceTest {
         assertThat(user.getFeeds().get(10008l)).isEqualTo(10355l);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testSubscribeUserDoesNotExist() throws Exception {
         userResource.subscribe(99999999l, 10006l);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testSubscribeFeedDoesNotExist() throws Exception {
         userResource.subscribe(10005l, 99999999l);
     }
@@ -210,7 +211,7 @@ public class UserResourceTest {
         assertThat(user.getFeeds().containsKey(10002l)).isFalse();
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testUnsubscribeUserDoesNotExist() throws Exception {
         userResource.unsubscribe(999999999l, 10005l);
     }
@@ -277,7 +278,7 @@ public class UserResourceTest {
         }
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testConsumeFeedsFeedDoesNotExist() throws Exception {
         userResource.consumeFeeds(10005l, ImmutableMap.of(99999l, 10000l));
     }

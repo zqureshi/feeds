@@ -13,6 +13,7 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.NotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -132,7 +133,7 @@ public class FeedResourceTest {
         }
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testShowFeedNotFound() throws Exception {
         feedResource.showFeed(999999999l, Optional.empty());
     }
@@ -184,7 +185,7 @@ public class FeedResourceTest {
         assertThat(feed.getArticles().get(49)).isEqualTo(article);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test(expected = NotFoundException.class)
     public void testPublishArticleFeedNotFound() throws Exception {
         feedResource.publishArticle(99999999l, "#DEADBEEF");
     }

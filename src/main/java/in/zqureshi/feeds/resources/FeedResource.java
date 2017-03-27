@@ -64,7 +64,7 @@ public class FeedResource {
     public Feed showFeed(@PathParam("id") Long id, @QueryParam("startId") Optional<Long> startId) throws IOException {
         // Check if feed exists
         if (db.get(FEEDS_PREFIX + id) == null) {
-            throw new NoSuchElementException();
+            throw new NotFoundException();
         }
 
         final long articleCount = db.getCounter(ARTICLES_COUNTER_PREFIX + id);
@@ -96,7 +96,7 @@ public class FeedResource {
     @Consumes(MediaType.TEXT_PLAIN)
     public Article publishArticle(@PathParam("id") Long feedId, String text) throws JsonProcessingException {
         if (db.get(FEEDS_PREFIX + feedId) == null) {
-            throw new NoSuchElementException();
+            throw new NotFoundException();
         }
 
         final long articleId = db.incrementCounter(ARTICLES_COUNTER_PREFIX + feedId);

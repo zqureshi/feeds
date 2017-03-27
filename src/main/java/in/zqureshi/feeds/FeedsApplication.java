@@ -1,6 +1,7 @@
 package in.zqureshi.feeds;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import in.zqureshi.feeds.cli.DumpDBCommand;
 import in.zqureshi.feeds.cli.RocksDBCommand;
 import in.zqureshi.feeds.db.FeedsDB;
 import in.zqureshi.feeds.resources.CounterResource;
@@ -23,7 +24,7 @@ public class FeedsApplication extends Application<FeedsConfiguration> {
 
     @Override
     public void initialize(final Bootstrap<FeedsConfiguration> bootstrap) {
-        bootstrap.addCommand(new RocksDBCommand());
+        bootstrap.addCommand(new DumpDBCommand());
     }
 
     @Override
