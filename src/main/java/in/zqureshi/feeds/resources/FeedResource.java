@@ -67,18 +67,23 @@ public class FeedResource {
             throw new NoSuchElementException();
         }
 
+        final long articleCount = db.getCounter(ARTICLES_COUNTER_PREFIX + id);
         long startIndex = FeedsDB.INITIAL_COUNTER_VALUE;
         if (startId.isPresent()) {
             startIndex = startId.get();
+
+            if (startIndex < FeedsDB.INITIAL_COUNTER_VALUE
+                || startIndex > articleCount) {
+                throw new IndexOutOfBoundsException();
+            }
         } else {
-            // Get article count for feed and return last 50 articles
-            final long articleCount = db.getCounter(ARTICLES_COUNTER_PREFIX + id);
+            // return last 50 articles
             startIndex = Math.max(FeedsDB.INITIAL_COUNTER_VALUE, articleCount - PAGE_SIZE);
         }
 
         List<Article> articles = new ArrayList<>(PAGE_SIZE);
         for (FeedsDB.PrefixIterator it = db.scan(constructArticlePrefix(id), Long.toString(startIndex));
-             it.hasNext() && articles.size() <= PAGE_SIZE;) {
+             it.hasNext() && articles.size() < PAGE_SIZE;) {
             articles.add(mapper.readValue(it.next(), Article.class));
         }
 

@@ -134,4 +134,41 @@ public class FeedResourceTest {
     public void testShowFeedNotFound() throws Exception {
         feedResource.showFeed(999999999l, Optional.empty());
     }
+
+    @Test
+    public void testShowFeedIndexLastPage() throws Exception {
+        Feed feed = feedResource.showFeed(10007l, Optional.of(10250l));
+        assertThat(feed.getId()).isEqualTo(10007l);
+        assertThat(feed.getArticles()).hasSize(6);
+
+        for (int i = 0, j = 10250; i < 6; i++, j++) {
+            assertThat(feed.getArticles().get(i).getId()).isEqualTo(j);
+        }
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testShowFeedIndexOutOfLowerBound() throws Exception {
+        feedResource.showFeed(10007l, Optional.of(9999l));
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testShowFeedIndexOutOfUpperBound() throws Exception {
+        feedResource.showFeed(10007l, Optional.of(999999l));
+    }
+
+    @Test
+    public void testShowFeedSuccessivePages() throws Exception {
+        Feed feed = feedResource.showFeed(10007l, Optional.of(10200l));
+        assertThat(feed.getArticles()).hasSize(50);
+        assertThat(feed.getArticles().get(0).getId()).isEqualTo(10200);
+        assertThat(feed.getArticles().get(49).getId()).isEqualTo(10249);
+
+        feed = feedResource.showFeed(10007l, Optional.of(10249l));
+        assertThat(feed.getArticles()).hasSize(7);
+        // Yep, these are not pure half intervals because I took the shortcut
+        // by returning a feed object rather than a wrapper that includes a
+        // proper continuation token.
+        assertThat(feed.getArticles().get(0).getId()).isEqualTo(10249);
+        assertThat(feed.getArticles().get(6).getId()).isEqualTo(10255);
+    }
 }
