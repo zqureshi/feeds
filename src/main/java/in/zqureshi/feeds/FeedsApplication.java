@@ -32,9 +32,11 @@ public class FeedsApplication extends Application<FeedsConfiguration> {
         FeedsDB db = configuration.getFeedsDBFactory().build(environment);
         ObjectMapper mapper = environment.getObjectMapper();
 
+        FeedResource feedResource = new FeedResource(db, mapper);
+        environment.jersey().register(feedResource);
+
         environment.jersey().register(new CounterResource(db));
-        environment.jersey().register(new UserResource(db, mapper));
-        environment.jersey().register(new FeedResource(db, mapper));
+        environment.jersey().register(new UserResource(db, feedResource, mapper));
     }
 
 }

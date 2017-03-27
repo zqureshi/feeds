@@ -4,19 +4,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Sets;
+import in.zqureshi.feeds.api.Article;
+import in.zqureshi.feeds.api.Feed;
 import in.zqureshi.feeds.api.User;
 import in.zqureshi.feeds.db.FeedsDB;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.jws.soap.SOAPBinding;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOError;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Path("/v1/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -26,10 +27,12 @@ public class UserResource {
 
     private FeedsDB db;
     private ObjectMapper mapper;
+    private FeedResource feedResource;
 
-    public UserResource(FeedsDB db, ObjectMapper mapper) {
+    public UserResource(FeedsDB db, FeedResource feedResource, ObjectMapper mapper) {
         this.db = db;
         this.mapper = mapper;
+        this.feedResource = feedResource;
     }
 
     @GET
@@ -49,7 +52,44 @@ public class UserResource {
     public User createUser() throws JsonProcessingException {
         final long id = db.incrementCounter(USERS_COUNTER);
         User user = new User(id, Collections.emptyMap());
-        db.put(USERS_PREFIX + id, mapper.writeValueAsBytes(user));
+
+        return updateUser(user);
+    }
+
+    public User updateUser(User user) throws JsonProcessingException {
+        db.put(USERS_PREFIX + user.getId(), mapper.writeValueAsBytes(user));
+        return user;
+    }
+
+    @GET
+    @Path("/{id}")
+    public User getUser(@PathParam("id") Long id) throws IOException {
+        byte[] result = db.get(USERS_PREFIX + id);
+        if (result == null) {
+            throw new NotFoundException();
+        }
+
+        return mapper.readValue(result, User.class);
+    }
+
+    @POST
+    @Path("/{id}/subscribe")
+    @Produces(MediaType.APPLICATION_JSON)
+    public synchronized User subscribe(@PathParam("id") Long id, @QueryParam("feedId") Long feedId) throws IOException {
+        User user = getUser(id);
+
+        if (!user.getFeeds().containsKey(feedId)) {
+            Feed feed = feedResource.showFeed(feedId, Optional.empty());
+            Long feedIndex = FeedsDB.INITIAL_COUNTER_VALUE;
+
+            if (feed.getArticles().size() > 0) {
+                Article lastArticle = feed.getArticles().get(feed.getArticles().size() - 1);
+                feedIndex = lastArticle.getId();
+            }
+
+            user.getFeeds().put(feedId, feedIndex);
+            return updateUser(user);
+        }
 
         return user;
     }
