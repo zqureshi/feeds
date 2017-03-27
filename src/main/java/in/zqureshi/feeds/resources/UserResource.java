@@ -8,20 +8,21 @@ import in.zqureshi.feeds.api.Article;
 import in.zqureshi.feeds.api.Feed;
 import in.zqureshi.feeds.api.User;
 import in.zqureshi.feeds.db.FeedsDB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jws.soap.SOAPBinding;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOError;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Path("/v1/users")
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserResource.class);
+
     private static final String USERS_COUNTER = "/users";
     private static final String USERS_PREFIX = "/users/";
 
@@ -106,5 +107,23 @@ public class UserResource {
         }
 
         return user;
+    }
+
+    @POST
+    @Path("/{id}/consumeFeeds")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public List<Feed> consumeFeeds(@PathParam("id") Long id, Map<Long, Long> startIds) throws IOException {
+        LOGGER.info("User " + id + " consuming feeds " + startIds);
+
+        User user = getUser(id);
+        user.getFeeds().putAll(startIds);
+
+        List<Feed> feeds = new ArrayList<>(user.getFeeds().size());
+        for (Map.Entry<Long, Long> entry : user.getFeeds().entrySet()) {
+            feeds.add(feedResource.showFeed(entry.getKey(), Optional.of(entry.getValue())));
+        }
+
+        return feeds;
     }
 }
