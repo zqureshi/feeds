@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.NoSuchElementException;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class FeedsDBTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeedsDBTest.class);
@@ -33,18 +33,18 @@ public class FeedsDBTest {
 
     @Test
     public void incrementCounter() {
-        // Should start with zero
-        assertEquals(10000, db.incrementCounter("/users"));
+        // Should start with minimum counter
+        assertThat(db.incrementCounter("/users")).isEqualTo(10000);
         // Then increase monotonically
-        assertEquals(10001, db.incrementCounter("/users"));
+        assertThat(db.incrementCounter("/users")).isEqualTo(10001);
         // Should be independent for a different key
-        assertEquals(10000, db.incrementCounter("/feeds"));
-        assertEquals(10001, db.incrementCounter("/feeds"));
+        assertThat(db.incrementCounter("/feeds")).isEqualTo(10000);
+        assertThat(db.incrementCounter("/feeds")).isEqualTo(10001);
         // And increment properly for previous key
-        assertEquals(10002, db.incrementCounter("/users"));
+        assertThat(db.incrementCounter("/users")).isEqualTo(10002);
 
         for (int i = 0; i < 10000; i++) {
-            assertEquals(10000 + i, db.incrementCounter("/loop"));
+            assertThat(db.incrementCounter("/loop")).isEqualTo(10000 + i);
         }
     }
 
@@ -59,22 +59,25 @@ public class FeedsDBTest {
             db.incrementCounter("/popular");
         }
 
-        assertEquals(
-            ImmutableMap.of("/first", 10002L, "/second", 10001L, "/popular", 10100L),
-            db.counters());
+        assertThat(db.counters())
+            .isEqualTo(ImmutableMap.of(
+                "/first", 10002L,
+                "/second", 10001L,
+                "/popular", 10100L)
+            );
     }
 
     @Test
     public void simpleGetAndPut() {
         // Should return null for nonexistant key.
-        assertEquals(null, db.get("/foobar"));
+        assertThat(db.get("/foobar")).isNull();
 
         // Put and get
         db.put("/memory", "#DEADBEEF".getBytes());
-        assertArrayEquals("#DEADBEEF".getBytes(), db.get("/memory"));
+        assertThat(db.get("/memory")).isEqualTo("#DEADBEEF".getBytes());
 
         db.put("/memory", "".getBytes());
-        assertArrayEquals("".getBytes(), db.get("/memory"));
+        assertThat(db.get("/memory")).isEmpty();
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -87,11 +90,11 @@ public class FeedsDBTest {
         FeedsDB.PrefixIterator it = db.scan("/users");
 
         // Keys should be read in sorted order
-        assertTrue(it.hasNext());
-        assertArrayEquals("/1".getBytes(), it.next());
-        assertArrayEquals("/2".getBytes(), it.next());
-        assertArrayEquals("/3".getBytes(), it.next());
-        assertFalse(it.hasNext());
+        assertThat(it.hasNext()).isTrue();
+        assertThat(it.next()).isEqualTo("/1".getBytes());
+        assertThat(it.next()).isEqualTo("/2".getBytes());
+        assertThat(it.next()).isEqualTo("/3".getBytes());
+        assertThat(it.hasNext()).isFalse();
 
         // Now trigger the exception
         it.next();
@@ -106,10 +109,10 @@ public class FeedsDBTest {
         FeedsDB.PrefixIterator it = db.scan("/users", "/1050");
 
         for (int i = 1050; i < 1100; i++) {
-            assertEquals(i, Ints.fromByteArray(it.next()));
+            assertThat(Ints.fromByteArray(it.next())).isEqualTo(i);
         }
 
-        assertFalse(it.hasNext());
+        assertThat(it.hasNext()).isFalse();
         it.next();
     }
 }
