@@ -114,8 +114,6 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Feed> consumeFeeds(@PathParam("id") Long id, Map<Long, Long> startIds) throws IOException {
-        LOGGER.info("User " + id + " consuming feeds " + startIds);
-
         User user = getUser(id);
         user.getFeeds().putAll(startIds);
 

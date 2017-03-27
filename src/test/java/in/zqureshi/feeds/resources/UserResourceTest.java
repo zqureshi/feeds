@@ -1,9 +1,13 @@
 package in.zqureshi.feeds.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import in.zqureshi.feeds.api.Article;
+import in.zqureshi.feeds.api.Feed;
 import in.zqureshi.feeds.api.User;
 import in.zqureshi.feeds.db.FeedsDB;
+import org.assertj.core.api.AssertDelegateTarget;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -13,9 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -155,6 +157,23 @@ public class UserResourceTest {
         assertThat(user.getFeeds().get(10000l)).isEqualTo(10255l);
     }
 
+    @Test
+    public void testSubscribeAfterPublishing() throws Exception {
+        User user = userResource.getUser(10005l);
+        assertThat(user.getFeeds()).hasSize(5);
+        assertThat(user.getFeeds().containsKey(10008l)).isFalse();
+
+        Article article = null;
+        for (int i = 0; i < 100; i++) {
+            article = feedResource.publishArticle(10008l, "#DEADBEEF:" + i);
+        }
+        assertThat(article.getId()).isEqualTo(10355l);
+
+        user = userResource.subscribe(10005l, 10008l);
+        assertThat(user.getFeeds()).hasSize(6);
+        assertThat(user.getFeeds().get(10008l)).isEqualTo(10355l);
+    }
+
     @Test(expected = NoSuchElementException.class)
     public void testSubscribeUserDoesNotExist() throws Exception {
         userResource.subscribe(99999999l, 10006l);
@@ -205,6 +224,72 @@ public class UserResourceTest {
 
         user = userResource.unsubscribe(10005l, 999999l);
         assertThat(user.getFeeds()).hasSize(5);
+    }
+
+    @Test
+    public void testConsumeFeeds() throws Exception {
+        List<Feed> feeds = userResource.consumeFeeds(10005l, Collections.emptyMap());
+        assertThat(feeds).hasSize(5);
+
+        Set<Long> feedsSeen = new HashSet<>();
+        for (Feed feed : feeds) {
+            feedsSeen.add(feed.getId());
+            // Since default pointers are at the last element because user subscribed
+            // after all publishings.
+            assertThat(feed.getArticles()).hasSize(1);
+            assertThat(feed.getArticles().get(0).getId()).isEqualTo(10255l);
+        }
+
+        assertThat(feedsSeen)
+            .isEqualTo(Sets.newHashSet(10000l, 10001l, 10002l, 10003l, 10004l));
+    }
+
+    @Test
+    public void testConsumeFeedsWithIndices() throws Exception {
+        List<Feed> feeds = userResource.consumeFeeds(
+            10005l,
+            ImmutableMap.of(
+                10000l, 10200l,
+                10003l, 10250l
+            )
+        );
+
+        assertThat(feeds).hasSize(5);
+
+        Set<Long> feedsSeen = new HashSet<>();
+        for (Feed feed : feeds) {
+            feedsSeen.add(feed.getId());
+
+            if (feed.getId() == 10000l) {
+                assertThat(feed.getArticles()).hasSize(50);
+                for (int i = 0, j = 10200; i < 50; i++, j++) {
+                    assertThat(feed.getArticles().get(i).getId()).isEqualTo(j);
+                }
+            } else if (feed.getId() == 10003l) {
+                assertThat(feed.getArticles()).hasSize(6);
+                for (int i = 0, j = 10250; i < 6; i++, j++) {
+                    assertThat(feed.getArticles().get(i).getId()).isEqualTo(j);
+                }
+            } else {
+                assertThat(feed.getArticles()).hasSize(1);
+                assertThat(feed.getArticles().get(0).getId()).isEqualTo(10255l);
+            }
+        }
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testConsumeFeedsFeedDoesNotExist() throws Exception {
+        userResource.consumeFeeds(10005l, ImmutableMap.of(99999l, 10000l));
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testConsumeFeedsIndexOutOfLowerBound() throws Exception {
+        userResource.consumeFeeds(10005l, ImmutableMap.of(10001l, 9999l));
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testConsumeFeedsIndexOutOfUpperBound() throws Exception {
+        userResource.consumeFeeds(10005l, ImmutableMap.of(10001l, 99999999l));
     }
 
     // Same shitty solution to test atomicity, an a better test suite would
