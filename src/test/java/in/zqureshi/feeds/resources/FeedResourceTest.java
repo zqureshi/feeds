@@ -13,8 +13,12 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.NotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -90,5 +94,44 @@ public class FeedResourceTest {
                 assertThat(article.getText()).isEqualToIgnoringCase("f:" + i + "a:" + j);
             }
         }
+        assertThat(it.hasNext()).isFalse();
+    }
+
+    @Test
+    public void testListFeeds() throws Exception {
+        List<Feed> feeds = feedResource.listFeeds();
+
+        assertThat(feeds.size()).isEqualTo(10);
+        for (int i = 0; i < 10; i++) {
+            Feed feed = feeds.get(i);
+            assertThat(feed.getId()).isEqualTo(10000 + i);
+            assertThat(feed.getArticles()).isEmpty();
+        }
+    }
+
+    @Test
+    public void testCreateFeed() throws Exception {
+        Feed feed = feedResource.creatFeed();
+        assertThat(feed.getId()).isEqualTo(10010);
+        assertThat(feed.getArticles()).isEmpty();
+    }
+
+    @Test
+    public void testShowFeed() throws Exception {
+        Feed feed = feedResource.showFeed(10005l, Optional.empty());
+        assertThat(feed.getId()).isEqualTo(10005l);
+        assertThat(feed.getArticles()).hasSize(50);
+
+        // Should have the last 50 articles in feed.
+        for (int i = 0, j = 206; i < 50; i++, j++) {
+            Article article = feed.getArticles().get(i);
+            assertThat(article.getId()).isEqualTo(10000 + j);
+            assertThat(article.getText()).isEqualTo("f:" + 5 + "a:" + j);
+        }
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testShowFeedNotFound() throws Exception {
+        feedResource.showFeed(999999999l, Optional.empty());
     }
 }
