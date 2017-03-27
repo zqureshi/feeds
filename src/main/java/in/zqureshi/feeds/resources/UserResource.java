@@ -67,7 +67,7 @@ public class UserResource {
     public User getUser(@PathParam("id") Long id) throws IOException {
         byte[] result = db.get(USERS_PREFIX + id);
         if (result == null) {
-            throw new NotFoundException();
+            throw new NoSuchElementException();
         }
 
         return mapper.readValue(result, User.class);

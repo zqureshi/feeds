@@ -36,19 +36,23 @@ public class FeedResourceTest {
         mapper = new ObjectMapper();
         feedResource = new FeedResource(db, mapper);
 
-        // Populate feeds and articles
-        for (int i = 0; i < 10; i++) {
-            Feed feed = feedResource.creatFeed();
-
-            for(int j = 0; j < 256; j++) {
-                feedResource.publishArticle(feed.getId(), "f:" + i + "a:" + j);
-            }
-        }
+        FeedResourceTest.populateDB(feedResource);
     }
 
     @After
     public void after() throws Exception {
         db.stop();
+    }
+
+    public static void populateDB(FeedResource feedResource) throws Exception {
+        // Populate feeds and articles
+        for (int i = 0; i < 10; i++) {
+            Feed feed = feedResource.creatFeed();
+
+            for (int j = 0; j < 256; j++) {
+                feedResource.publishArticle(feed.getId(), "f:" + i + "a:" + j);
+            }
+        }
     }
 
     @Test
