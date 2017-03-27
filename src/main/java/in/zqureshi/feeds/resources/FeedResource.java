@@ -91,8 +91,6 @@ public class FeedResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.TEXT_PLAIN)
     public Article publishArticle(@PathParam("id") Long feedId, String text) throws JsonProcessingException {
-        LOGGER.info("Publishing to feed " + feedId + " with article: " + text);
-
         if (db.get(FEEDS_PREFIX + feedId) == null) {
             throw new NotFoundException();
         }
