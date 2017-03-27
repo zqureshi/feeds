@@ -13,8 +13,6 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.NotFoundException;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -170,5 +168,20 @@ public class FeedResourceTest {
         // proper continuation token.
         assertThat(feed.getArticles().get(0).getId()).isEqualTo(10249);
         assertThat(feed.getArticles().get(6).getId()).isEqualTo(10255);
+    }
+
+    @Test
+    public void testPublishArticle() throws Exception {
+        Article article = feedResource.publishArticle(10009l, "#DEADBEEF");
+        assertThat(article.getId()).isEqualTo(10256);
+        assertThat(article.getText()).isEqualTo("#DEADBEEF");
+
+        Feed feed = feedResource.showFeed(10009l, Optional.empty());
+        assertThat(feed.getArticles().get(49)).isEqualTo(article);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testPublishArticleFeedNotFound() throws Exception {
+        feedResource.publishArticle(99999999l, "#DEADBEEF");
     }
 }
