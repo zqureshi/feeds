@@ -11,8 +11,12 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -79,5 +83,60 @@ public class UserResourceTest {
             }
         }
         assertThat(it.hasNext()).isFalse();
+    }
+
+    @Test
+    public void testListUsers() throws Exception {
+        List<User> users = userResource.listUsers();
+        assertThat(users).hasSize(10);
+
+        for (int i = 0; i < 10; i++) {
+            User user = users.get(i);
+            assertThat(user.getId()).isEqualTo(10000 + i);
+            assertThat(user.getFeeds()).hasSize(5);
+
+            assertThat(user.getFeeds().keySet())
+                .isEqualTo(Sets.newHashSet(
+                    10000l, 10001l, 10002l, 10003l, 10004l
+                ));
+
+            // startIndex for each feed must be 255 since user started
+            // tracking it after all articles had been published.
+            for (Map.Entry<Long, Long> entry : user.getFeeds().entrySet()) {
+                assertThat(entry.getValue()).isEqualTo(10255);
+            }
+        }
+    }
+
+    @Test
+    public void testCreateUser() throws Exception {
+        User user = userResource.createUser();
+        assertThat(user.getId()).isEqualTo(10010);
+        assertThat(user.getFeeds()).isEmpty();
+
+        List<User> users = userResource.listUsers();
+        assertThat(users).hasSize(11);
+        assertThat(users.get(10)).isEqualTo(user);
+    }
+
+    @Test
+    public void testGetUser() throws Exception {
+        User user = userResource.getUser(10005l);
+        assertThat(user.getId()).isEqualTo(10005);
+        assertThat(user.getFeeds()).hasSize(5);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testGetUserDoesNotExist() throws Exception {
+        userResource.getUser(999999l);
+    }
+
+    @Test
+    public void testSubscribeIsSynchronized() throws Exception {
+        for (Method method : UserResource.class.getMethods()) {
+            if (method.getName() == "subscribe") {
+                assertThat(Modifier.isSynchronized(method.getModifiers())).isTrue();
+            }
+        }
     }
 }
