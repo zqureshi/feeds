@@ -93,4 +93,18 @@ public class UserResource {
 
         return user;
     }
+
+    @POST
+    @Path("/{id}/unsubscribe")
+    @Produces(MediaType.APPLICATION_JSON)
+    public synchronized User unsubscribe(@PathParam("id") Long id, @QueryParam("feedId") Long feedId) throws IOException {
+        User user = getUser(id);
+
+        if (user.getFeeds().containsKey(feedId)) {
+            user.getFeeds().remove(feedId);
+            return updateUser(user);
+        }
+
+        return user;
+    }
 }
