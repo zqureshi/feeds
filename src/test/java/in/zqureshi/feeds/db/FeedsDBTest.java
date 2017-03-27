@@ -9,6 +9,8 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.*;
@@ -45,6 +47,18 @@ public class FeedsDBTest {
 
         for (int i = 0; i < 10000; i++) {
             assertThat(db.incrementCounter("/loop")).isEqualTo(10000 + i);
+        }
+    }
+
+    // Shitty method of making sure it's atomic, in a better test suite would
+    // try to trigger race conditions by overloading with threads and force
+    // context switching.
+    @Test
+    public void testIncrementCounterIsSynchronized() {
+        for (Method method : FeedsDB.class.getMethods()) {
+            if (method.getName() == "incrementCounter") {
+                assertThat(Modifier.isSynchronized(method.getModifiers())).isTrue();
+            }
         }
     }
 
