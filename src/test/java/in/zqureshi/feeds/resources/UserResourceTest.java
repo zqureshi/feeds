@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -132,9 +131,98 @@ public class UserResourceTest {
     }
 
     @Test
+    public void testSubscribe() throws Exception {
+        User user = userResource.getUser(10005l);
+        assertThat(user.getFeeds()).hasSize(5);
+
+        user = userResource.subscribe(10005l, 10006l);
+        assertThat(user.getFeeds()).hasSize(6);
+        assertThat(user.getFeeds().get(10006l)).isEqualTo(10255l);
+
+        user = userResource.getUser(10005l);
+        assertThat(user.getFeeds()).hasSize(6);
+        assertThat(user.getFeeds().get(10006l)).isEqualTo(10255l);
+    }
+
+    @Test
+    public void testSubscribeIsIdempotent() throws Exception {
+        User user = userResource.getUser(10005l);
+        assertThat(user.getFeeds()).hasSize(5);
+        assertThat(user.getFeeds().get(10000l)).isEqualTo(10255l);
+
+        user = userResource.subscribe(10005l, 10000l);
+        assertThat(user.getFeeds()).hasSize(5);
+        assertThat(user.getFeeds().get(10000l)).isEqualTo(10255l);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testSubscribeUserDoesNotExist() throws Exception {
+        userResource.subscribe(99999999l, 10006l);
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testSubscribeFeedDoesNotExist() throws Exception {
+        userResource.subscribe(10005l, 99999999l);
+    }
+
+    @Test
+    public void testUnsubscribe() throws Exception {
+        User user = userResource.getUser(10003l);
+        assertThat(user.getFeeds()).hasSize(5);
+        assertThat(user.getFeeds().containsKey(10002l)).isTrue();
+
+        user = userResource.unsubscribe(10003l, 10002l);
+        assertThat(user.getFeeds()).hasSize(4);
+        assertThat(user.getFeeds().containsKey(10002l)).isFalse();
+
+        user = userResource.getUser(10003l);
+        assertThat(user.getFeeds()).hasSize(4);
+        assertThat(user.getFeeds().containsKey(10002l)).isFalse();
+    }
+
+    @Test
+    public void testUnsubscribeIsIdempotent() throws Exception {
+        User user = userResource.unsubscribe(10003l, 10002l);
+        assertThat(user.getFeeds()).hasSize(4);
+        assertThat(user.getFeeds().containsKey(10002l)).isFalse();
+
+        user = userResource.unsubscribe(10003l, 10002l);
+        assertThat(user.getFeeds()).hasSize(4);
+        assertThat(user.getFeeds().containsKey(10002l)).isFalse();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void testUnsubscribeUserDoesNotExist() throws Exception {
+        userResource.unsubscribe(999999999l, 10005l);
+    }
+
+    // Doesn't throw an exception because will short circuit if user
+    // is not subscribed to this feed.
+    @Test
+    public void testUnsubscribeFeedDoesNotExist() throws Exception {
+        User user = userResource.getUser(10005l);
+        assertThat(user.getFeeds()).hasSize(5);
+
+        user = userResource.unsubscribe(10005l, 999999l);
+        assertThat(user.getFeeds()).hasSize(5);
+    }
+
+    // Same shitty solution to test atomicity, an a better test suite would
+    // be continuously fuzz testing.
+
+    @Test
     public void testSubscribeIsSynchronized() throws Exception {
         for (Method method : UserResource.class.getMethods()) {
             if (method.getName() == "subscribe") {
+                assertThat(Modifier.isSynchronized(method.getModifiers())).isTrue();
+            }
+        }
+    }
+
+    @Test
+    public void testUnsubscribeIsSynchronized() throws Exception {
+        for (Method method : UserResource.class.getMethods()) {
+            if (method.getName() == "unsubscribe") {
                 assertThat(Modifier.isSynchronized(method.getModifiers())).isTrue();
             }
         }
