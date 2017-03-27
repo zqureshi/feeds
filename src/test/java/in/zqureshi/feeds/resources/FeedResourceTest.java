@@ -3,6 +3,7 @@ package in.zqureshi.feeds.resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import in.zqureshi.feeds.api.Article;
 import in.zqureshi.feeds.api.Feed;
+import in.zqureshi.feeds.cli.PopulateCommand;
 import in.zqureshi.feeds.db.FeedsDB;
 import org.junit.After;
 import org.junit.Before;
@@ -37,23 +38,12 @@ public class FeedResourceTest {
         mapper = new ObjectMapper();
         feedResource = new FeedResource(db, mapper);
 
-        FeedResourceTest.populateDB(feedResource);
+        PopulateCommand.populateFeeds(feedResource);
     }
 
     @After
     public void after() throws Exception {
         db.stop();
-    }
-
-    public static void populateDB(FeedResource feedResource) throws Exception {
-        // Populate feeds and articles
-        for (int i = 0; i < 10; i++) {
-            Feed feed = feedResource.creatFeed();
-
-            for (int j = 0; j < 256; j++) {
-                feedResource.publishArticle(feed.getId(), "f:" + i + "a:" + j);
-            }
-        }
     }
 
     @Test

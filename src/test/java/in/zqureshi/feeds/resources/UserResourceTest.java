@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import in.zqureshi.feeds.api.Article;
 import in.zqureshi.feeds.api.Feed;
 import in.zqureshi.feeds.api.User;
+import in.zqureshi.feeds.cli.PopulateCommand;
 import in.zqureshi.feeds.db.FeedsDB;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.junit.Before;
@@ -40,19 +41,8 @@ public class UserResourceTest {
         feedResource = new FeedResource(db, mapper);
         userResource = new UserResource(db, feedResource, mapper);
 
-        FeedResourceTest.populateDB(feedResource);
-        UserResourceTest.populateDB(userResource);
-    }
-
-    public static void populateDB(UserResource userResource) throws Exception {
-        // Populate users and subscribe to feeds
-        for (int i = 0; i < 10; i++) {
-            User user = userResource.createUser();
-
-            for (int j = 0; j < 5; j++) {
-                userResource.subscribe(user.getId(), 10000l + j);
-            }
-        }
+        PopulateCommand.populateFeeds(feedResource);
+        PopulateCommand.populateUsers(userResource);
     }
 
     @Test

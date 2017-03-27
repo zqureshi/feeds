@@ -17,7 +17,7 @@ public class DumpDBCommand extends ConfiguredCommand<FeedsConfiguration> {
     public static final Logger LOGGER = LoggerFactory.getLogger(DumpDBCommand.class);
 
     public DumpDBCommand() {
-        super("dump", "Dump Database");
+        super("dump", "Dump database");
     }
 
     @Override
